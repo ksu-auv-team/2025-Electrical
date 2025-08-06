@@ -1,7 +1,15 @@
-#include "main.h"
+/*
+ * i2c.slave.c
+ *
+ *  Created on: Aug 6, 2025
+ *      Author: Juang
+ */
+
 #include "i2c_slave.h"
 
-uint8_t I2C_REGISTERS[10] = {0,0,0,0,0,0,0,0,0,0};
+#include "main.h"
+
+uint8_t I2C_REGISTERS[7] = {0,0,0,0,0,0,0};
 
 extern I2C_HandleTypeDef hi2c2;
 
@@ -15,6 +23,7 @@ int counterror = 0;
 
 void process_data (void)
 {
+
 	int startREG = RxData[0];  // get the register address
 	int numREG = rxcount-1;  // Get the number of registers
 	int endREG = startREG + numREG -1;  // calculate the end register
@@ -30,7 +39,7 @@ void process_data (void)
 	}
 }
 
-void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef *hi2c)
+void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef *hi2c) // Puts to listen mode to look for req from master
 {
 	HAL_I2C_EnableListen_IT(hi2c);
 }

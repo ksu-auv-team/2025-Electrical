@@ -5,23 +5,23 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../USB_Device/Target/usbd_conf.c 
+../Middlewares/ST/STM32_USB_Device_Library/Class/DFU/Src/usbd_dfu.c 
 
 OBJS += \
-./USB_Device/Target/usbd_conf.o 
+./Middlewares/ST/STM32_USB_Device_Library/Class/DFU/Src/usbd_dfu.o 
 
 C_DEPS += \
-./USB_Device/Target/usbd_conf.d 
+./Middlewares/ST/STM32_USB_Device_Library/Class/DFU/Src/usbd_dfu.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
-USB_Device/Target/%.o USB_Device/Target/%.su USB_Device/Target/%.cyclo: ../USB_Device/Target/%.c USB_Device/Target/subdir.mk
+Middlewares/ST/STM32_USB_Device_Library/Class/DFU/Src/%.o Middlewares/ST/STM32_USB_Device_Library/Class/DFU/Src/%.su Middlewares/ST/STM32_USB_Device_Library/Class/DFU/Src/%.cyclo: ../Middlewares/ST/STM32_USB_Device_Library/Class/DFU/Src/%.c Middlewares/ST/STM32_USB_Device_Library/Class/DFU/Src/subdir.mk
 	arm-none-eabi-gcc "$<" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32G431xx -c -I../Core/Inc -I../Drivers/STM32G4xx_HAL_Driver/Inc -I../Drivers/STM32G4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32G4xx/Include -I../Drivers/CMSIS/Include -I../USB_Device/App -I../USB_Device/Target -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/DFU/Inc -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "$@"
 
-clean: clean-USB_Device-2f-Target
+clean: clean-Middlewares-2f-ST-2f-STM32_USB_Device_Library-2f-Class-2f-DFU-2f-Src
 
-clean-USB_Device-2f-Target:
-	-$(RM) ./USB_Device/Target/usbd_conf.cyclo ./USB_Device/Target/usbd_conf.d ./USB_Device/Target/usbd_conf.o ./USB_Device/Target/usbd_conf.su
+clean-Middlewares-2f-ST-2f-STM32_USB_Device_Library-2f-Class-2f-DFU-2f-Src:
+	-$(RM) ./Middlewares/ST/STM32_USB_Device_Library/Class/DFU/Src/usbd_dfu.cyclo ./Middlewares/ST/STM32_USB_Device_Library/Class/DFU/Src/usbd_dfu.d ./Middlewares/ST/STM32_USB_Device_Library/Class/DFU/Src/usbd_dfu.o ./Middlewares/ST/STM32_USB_Device_Library/Class/DFU/Src/usbd_dfu.su
 
-.PHONY: clean-USB_Device-2f-Target
+.PHONY: clean-Middlewares-2f-ST-2f-STM32_USB_Device_Library-2f-Class-2f-DFU-2f-Src
 

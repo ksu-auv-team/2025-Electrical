@@ -97,7 +97,7 @@ int main(void)
   MX_USB_Device_Init();
   /* USER CODE BEGIN 2 */
 
-  if (HAL_I2C_EnableListen_IT(&hi2c2) != HAL_OK)
+  if (HAL_I2C_EnableListen_IT(&hi2c2) != HAL_OK) //Entrs slav to listen for master requests
   {
 	  Error_Handler();
   }
