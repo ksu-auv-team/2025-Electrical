@@ -102,16 +102,36 @@ int main(void)
 	  Error_Handler();
   }
 
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+
+  uint32_t tim1Degrees = 90; // 0-180 degrees
+  uint32_t tim1PWM = 15; // PWM value for TIM2
+  int tim1Dir = 1; // 1 for increasing, -1 for decreasing
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
+  while (true)
   {
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
+    // Map tim1Degrees (0-180) to pulse width (500us-2500us)
+    uint32_t pulseWidth = 500 + ((tim1Degrees * 2000) / 180); // pulse width in us
+    tim1PWM = pulseWidth / 100; // 1 timer period = 100us
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, tim1PWM);
+    
+    tim1Degrees += tim1Dir;
+    if (tim1Degrees >= 180) {
+      tim1Degrees = 180;
+      tim1Dir = -1;
+    } else if (tim1Degrees <= 0) {
+      tim1Degrees = 0;
+      tim1Dir = 1;
+    }
+    HAL_Delay(56); // 180 steps * 56ms ≈ 10 seconds
   }
+  /* USER CODE END WHILE */
+
+  /* USER CODE BEGIN 3 */
+
   /* USER CODE END 3 */
 }
 
