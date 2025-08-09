@@ -6,16 +6,23 @@
  */
 
 #include "i2c_slave.h"
-
 #include "main.h"
 
-uint8_t I2C_REGISTERS[7] = {0,0,0,0,0,0,0};
-
 extern I2C_HandleTypeDef hi2c2;
+extern TIM_HandleTypeDef htim2;
+extern DMA_HandleTypeDef hdma_tim2_ch1;
+extern DMA_HandleTypeDef hdma_tim2_ch2;
+
+extern unsigned char tim1Degrees;
+extern unsigned char direction;
+extern float tim1PWM;
+extern float pulseWidth;
 
 #define RxSIZE 2
+
 uint8_t RxData[RxSIZE];
 uint8_t rxcount = 0;
+uint8_t I2C_REGISTERS[2] = {0,0};
 
 int countAddr = 0;
 int countrxcplt = 0;
@@ -27,7 +34,7 @@ void process_data (void)
 	int startREG = RxData[0];  // get the register address
 	int numREG = rxcount-1;  // Get the number of registers
 	int endREG = startREG + numREG -1;  // calculate the end register
-	if (endREG>9)  // There are a total of 10 registers (0-9)
+	if (endREG>2)  // There are a total of 10 registers (0-9)
 	{
 		Error_Handler();
 	}
@@ -35,7 +42,22 @@ void process_data (void)
 	int indx = 1;  // set the indx to 1 in order to start reading from RxData[1]
 	for (int i=0; i<numREG; i++)
 	{
-		I2C_REGISTERS[startREG++] = RxData[indx++];  // Read the data from RxData and save it in the I2C_REGISTERS
+		I2C_REGISTERS[startREG++] = RxData[indx++]; // Read the data from RxData and save it in the I2C_REGISTERS
+		HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+		pulseWidth = 500 + ((tim1Degrees * 2000) / 180); // pulse width in us
+		tim1PWM = pulseWidth / 100; // 1 timer period = 100us
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, tim1PWM);
+
+		if (direction)
+			tim1Degrees += 1;
+		if (!direction)
+			tim1Degrees -= 1;
+
+		if (tim1Degrees >= 180)
+			direction = 0;
+		if (tim1Degrees <= 0)
+			direction = 1;
+		HAL_Delay(28);
 	}
 }
 

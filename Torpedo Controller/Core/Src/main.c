@@ -42,11 +42,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c2;
-
 TIM_HandleTypeDef htim2;
-DMA_HandleTypeDef hdma_tim2_ch1;
 DMA_HandleTypeDef hdma_tim2_ch2;
-
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -58,7 +55,10 @@ static void MX_DMA_Init(void);
 static void MX_I2C2_Init(void);
 static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
-
+uint8_t tim1Degrees = 90; // 0-180 degrees
+uint8_t direction = 0;
+float tim1PWM = 15; // PWM value for TIM2
+float pulseWidth = 0;
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -102,6 +102,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+
   //uint32_t position = 0;
 
   if (HAL_I2C_EnableListen_IT(&hi2c2) != HAL_OK) //Entrs slav to listen for master requests
@@ -116,16 +117,22 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+	  		pulseWidth = 500 + ((tim1Degrees * 2000) / 180); // pulse width in us
+	  		tim1PWM = pulseWidth / 100; // 1 timer period = 100us
+	  		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, tim1PWM);
 
+	  		if (direction)
+	  			tim1Degrees += 1;
+	  		if (!direction)
+	  			tim1Degrees -= 1;
+
+	  		if (tim1Degrees >= 180)
+	  			direction = 0;
+	  		if (tim1Degrees <= 0)
+	  			direction = 1;
+	  		HAL_Delay(28);
     /* USER CODE BEGIN 3 */
-	  htim2.Instance->CCR1 = 15;
-	  HAL_Delay (100);
-	  htim2.Instance->CCR1 = 30;
-	  HAL_Delay (100);
-	  htim2.Instance->CCR1 = 75;
-	  HAL_Delay (100);
-
-	  HAL_Delay (100);
+	// Map tim1Degrees (0-180) to pulse width (500us-2500us)
   }
   /* USER CODE END 3 */
 }
@@ -297,9 +304,6 @@ static void MX_DMA_Init(void)
   __HAL_RCC_DMA1_CLK_ENABLE();
 
   /* DMA interrupt init */
-  /* DMA1_Channel1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
   /* DMA1_Channel2_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel2_IRQn);

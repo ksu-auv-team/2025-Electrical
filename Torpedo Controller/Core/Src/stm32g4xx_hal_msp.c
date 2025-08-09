@@ -23,8 +23,6 @@
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
-extern DMA_HandleTypeDef hdma_tim2_ch1;
-
 extern DMA_HandleTypeDef hdma_tim2_ch2;
 
 /* Private typedef -----------------------------------------------------------*/
@@ -189,23 +187,6 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base)
     __HAL_RCC_TIM2_CLK_ENABLE();
 
     /* TIM2 DMA Init */
-    /* TIM2_CH1 Init */
-    hdma_tim2_ch1.Instance = DMA1_Channel1;
-    hdma_tim2_ch1.Init.Request = DMA_REQUEST_TIM2_CH1;
-    hdma_tim2_ch1.Init.Direction = DMA_MEMORY_TO_PERIPH;
-    hdma_tim2_ch1.Init.PeriphInc = DMA_PINC_DISABLE;
-    hdma_tim2_ch1.Init.MemInc = DMA_MINC_ENABLE;
-    hdma_tim2_ch1.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
-    hdma_tim2_ch1.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
-    hdma_tim2_ch1.Init.Mode = DMA_NORMAL;
-    hdma_tim2_ch1.Init.Priority = DMA_PRIORITY_LOW;
-    if (HAL_DMA_Init(&hdma_tim2_ch1) != HAL_OK)
-    {
-      Error_Handler();
-    }
-
-    __HAL_LINKDMA(htim_base,hdma[TIM_DMA_ID_CC1],hdma_tim2_ch1);
-
     /* TIM2_CH2 Init */
     hdma_tim2_ch2.Instance = DMA1_Channel2;
     hdma_tim2_ch2.Init.Request = DMA_REQUEST_TIM2_CH2;
@@ -278,7 +259,6 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* htim_base)
     __HAL_RCC_TIM2_CLK_DISABLE();
 
     /* TIM2 DMA DeInit */
-    HAL_DMA_DeInit(htim_base->hdma[TIM_DMA_ID_CC1]);
     HAL_DMA_DeInit(htim_base->hdma[TIM_DMA_ID_CC2]);
 
     /* TIM2 interrupt DeInit */
