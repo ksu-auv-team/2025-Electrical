@@ -37,11 +37,11 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  16 .debug_macro  00021035  00000000  00000000  0002b9ec  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_line   0001c88c  00000000  00000000  0004ca21  2**0
+ 17 .debug_line   0001c88e  00000000  00000000  0004ca21  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    000c7d6d  00000000  00000000  000692ad  2**0
+ 18 .debug_str    000c7d6d  00000000  00000000  000692af  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000043  00000000  00000000  0013101a  2**0
+ 19 .comment      00000043  00000000  00000000  0013101c  2**0
                   CONTENTS, READONLY
  20 .debug_frame  00006018  00000000  00000000  00131060  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
@@ -367,21 +367,21 @@ int main(void)
  8000468:	f009 fd52 	bl	8009f10 <MX_USB_Device_Init>
   /* USER CODE BEGIN 2 */
 
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
  800046c:	2100      	movs	r1, #0
  800046e:	482e      	ldr	r0, [pc, #184]	@ (8000528 <main+0xd8>)
  8000470:	f005 f908 	bl	8005684 <HAL_TIM_PWM_Start>
 
-  //uint32_t position = 0;
+	//uint32_t position = 0;
 
-  if (HAL_I2C_EnableListen_IT(&hi2c2) != HAL_OK) //Entrs slav to listen for master requests
+	if (HAL_I2C_EnableListen_IT(&hi2c2) != HAL_OK) //Enters slave to listen for master requests
  8000474:	482d      	ldr	r0, [pc, #180]	@ (800052c <main+0xdc>)
  8000476:	f001 f82f 	bl	80014d8 <HAL_I2C_EnableListen_IT>
  800047a:	4603      	mov	r3, r0
  800047c:	2b00      	cmp	r3, #0
  800047e:	d001      	beq.n	8000484 <main+0x34>
-  {
-	  Error_Handler();
+			{
+		Error_Handler();
  8000480:	f000 f9bc 	bl	80007fc <Error_Handler>
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -979,9 +979,9 @@ __STATIC_FORCEINLINE void __disable_irq(void)
 }
  8000802:	bf00      	nop
   /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
-  while (1)
+	/* User can add his own implementation to report the HAL error return state */
+	__disable_irq();
+	while (1) {
  8000804:	bf00      	nop
  8000806:	e7fd      	b.n	8000804 <Error_Handler+0x8>
 
