@@ -64,8 +64,8 @@ all: main-build
 main-build: Torpedo\ Controller\ -\ Juan\ Garnica\ -\ 8-5-2025.elf secondary-outputs
 
 # Tool invocations
-Torpedo\ Controller\ -\ Juan\ Garnica\ -\ 8-5-2025.elf Torpedo\ Controller\ -\ Juan\ Garnica\ -\ 8-5-2025.map: $(OBJS) $(USER_OBJS) C:\Users\jspin\Documents\GitHub\2025-Electrical\Torpedo\ Controller\STM32G431KBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "Torpedo Controller - Juan Garnica - 8-5-2025.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\jspin\Documents\GitHub\2025-Electrical\Torpedo Controller\STM32G431KBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Torpedo Controller - Juan Garnica - 8-5-2025.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Torpedo\ Controller\ -\ Juan\ Garnica\ -\ 8-5-2025.elf Torpedo\ Controller\ -\ Juan\ Garnica\ -\ 8-5-2025.map: $(OBJS) $(USER_OBJS) C:\Users\Juang\OneDrive\Documents\GitHub\2025-Electrical\Torpedo\ Controller\STM32G431KBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "Torpedo Controller - Juan Garnica - 8-5-2025.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Juang\OneDrive\Documents\GitHub\2025-Electrical\Torpedo Controller\STM32G431KBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Torpedo Controller - Juan Garnica - 8-5-2025.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

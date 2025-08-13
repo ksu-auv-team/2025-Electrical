@@ -52,8 +52,8 @@ TIM_HandleTypeDef htim2;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_I2C2_Init(void);
 static void MX_TIM2_Init(void);
+static void MX_I2C2_Init(void);
 /* USER CODE BEGIN PFP */
 uint8_t tim1Degrees = 90; // 0-180 degrees
 uint8_t direction = 0;
@@ -95,17 +95,17 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_I2C2_Init();
   MX_TIM2_Init();
+  MX_I2C2_Init();
   MX_USB_Device_Init();
   /* USER CODE BEGIN 2 */
 
-	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
 
 	//uint32_t position = 0;
 
 	if (HAL_I2C_EnableListen_IT(&hi2c2) != HAL_OK) //Enters slave to listen for master requests
-			{
+	{
 		Error_Handler();
 	}
 
@@ -116,20 +116,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-		pulseWidth = 500 + ((tim1Degrees * 2000) / 180); // pulse width in us
-		tim1PWM = pulseWidth / 100; // 1 timer period = 100us
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, tim1PWM);
 
-		if (direction)
-			tim1Degrees += 1;
-		if (!direction)
-			tim1Degrees -= 1;
-
-		if (tim1Degrees >= 180)
-			direction = 0;
-		if (tim1Degrees <= 0)
-			direction = 1;
-		HAL_Delay(28);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -179,10 +166,6 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-
-  /** Enables the Clock Security System
-  */
-  HAL_RCC_EnableCSS();
 }
 
 /**
@@ -202,7 +185,7 @@ static void MX_I2C2_Init(void)
   /* USER CODE END I2C2_Init 1 */
   hi2c2.Instance = I2C2;
   hi2c2.Init.Timing = 0x10805D88;
-  hi2c2.Init.OwnAddress1 = 158;
+  hi2c2.Init.OwnAddress1 = 0x4f;
   hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
   hi2c2.Init.OwnAddress2 = 0;
@@ -253,7 +236,7 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 48-1;
+  htim2.Init.Prescaler = 48000-1;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 19999;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
