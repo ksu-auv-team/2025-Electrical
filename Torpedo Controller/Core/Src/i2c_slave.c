@@ -7,6 +7,7 @@
 
 #include "i2c_slave.h"
 #include "main.h"
+#include <string.h>
 
 static uint8_t i2c_rx[10];
 static uint8_t i2c_tx[10];
@@ -43,39 +44,34 @@ static inline void i2c_listen(I2C_HandleTypeDef *hi2c)
 void process_data (void)
 {
 	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_0);
-	HAL_Delay(0);
+
+	int angle = I2C_REGISTERS[0];
+	if (angle < 0) angle = 0;
+	if (angle > 180) angle = 180;
+
+	direction = I2C_REGISTERS[1];
+
+	pulseWidth = 500 + ((angle * 2000)/180); // Calculate pulse width in microseconds
+
+	tim1PWM = pulseWidth / 100; // Convert to timer ticks (100 µs per tick if period = 100us)
+
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+	__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, tim1PWM);
+
+	tim1Degrees = angle;
+
 	if (have_new_cmd)
-	{
-	    have_new_cmd = 0;
-	}
-	int startREG = RxData[0];  // get the register address
-	int numREG = rxcount-1;  // Get the number of registers
-	int endREG = startREG + numREG -1;  // calculate the end register
-	if (endREG>2)  // There are a total of 10 registers (0-9)
-	{
-		Error_Handler();
-	}
-
-	int indx = 1;  // set the indx to 1 in order to start reading from RxData[1]
-
-	for (int i=0; i<numREG; i++)
-	{
-		I2C_REGISTERS[startREG++] = RxData[indx++]; // Read the data from RxData and save it in the I2C_REGISTERS
-		HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-		pulseWidth = 500 + ((tim1Degrees * 2000) / 180); // pulse width in us
-		tim1PWM = pulseWidth / 100; // 1 timer period = 100us
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, tim1PWM);
-
-		if (direction)
-			tim1Degrees += 1;
-		if (!direction)
-			tim1Degrees -= 1;
-
-		if (tim1Degrees >= 180)
-			direction = 0;
-		if (tim1Degrees <= 0)
-			direction = 1;
-	}
+		{
+			__disable_irq();
+			have_new_cmd = 0;
+			// Save incoming data into register array
+		    for (int i = 0; i < rxcount; i++)
+		    {
+		    	I2C_REGISTERS[i] = RxData[i];
+		    }
+		    __enable_irq();
+		    process_data();
+		}
 }
 
 void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, uint16_t AddrMatchCode)
@@ -100,14 +96,18 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, ui
 
 void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
-    if (rx_len == 0) {
+    if (rx_len == 0)
+    {
         // We just received the header/length at i2c_rx[0]; now receive the payload
         uint8_t payload = i2c_rx[0];
         if (payload > sizeof(i2c_rx)-1) payload = sizeof(i2c_rx)-1; // bound
         rx_len = 1 + payload;
         HAL_I2C_Slave_Seq_Receive_IT(hi2c, &i2c_rx[1], payload, I2C_LAST_FRAME);
     } else {
-        // Full message received: set a flag for main loop to process
+    	// Copy data to RxData and update count
+        memcpy(RxData, i2c_rx, rx_len);
+        rxcount = rx_len;
+    	// Full message received: set a flag for main loop to process
         have_new_cmd = 1;
     }
 }
