@@ -11,7 +11,7 @@
 
 static uint8_t i2c_rx[10];
 static uint8_t i2c_tx[10];
-static volatile uint8_t rx_len = 0;
+static volatile uint8_t rx_count = 0;
 static volatile uint8_t tx_len = 0;
 static volatile uint8_t have_new_cmd = 0;
 
@@ -80,7 +80,7 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, ui
 
     if (TransferDirection == I2C_DIRECTION_TRANSMIT) {
         // Master will WRITE to us: first byte is register/len etc. Receive header (1 byte)
-        rx_len = 0;
+        rx_count = 0;
         HAL_I2C_Slave_Seq_Receive_IT(hi2c, &i2c_rx[0], 1, I2C_FIRST_AND_NEXT_FRAME);
     } else {
         // Master will READ from us: prepare a small status/register window
@@ -96,17 +96,17 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, ui
 
 void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
-    if (rx_len == 0)
+    if (rx_count == 0)
     {
         // We just received the header/length at i2c_rx[0]; now receive the payload
         uint8_t payload = i2c_rx[0];
         if (payload > sizeof(i2c_rx)-1) payload = sizeof(i2c_rx)-1; // bound
-        rx_len = 1 + payload;
+        rx_count = 1 + payload;
         HAL_I2C_Slave_Seq_Receive_IT(hi2c, &i2c_rx[1], payload, I2C_LAST_FRAME);
     } else {
     	// Copy data to RxData and update count
-        memcpy(RxData, i2c_rx, rx_len);
-        rxcount = rx_len;
+        memcpy(RxData, i2c_rx, rx_count);
+        rxcount = rx_count;
     	// Full message received: set a flag for main loop to process
         have_new_cmd = 1;
     }

@@ -6,11 +6,14 @@
  */
 
 #include "i2c_slave.h"
+#include <stdint.h>
+#include <stdio.h>
 #include "main.h"
 
-static uint8_t i2c_rx[10];
-static uint8_t i2c_tx[10];
-static volatile uint8_t rx_len = 0;
+static uint8_t i2c_rx[32];
+static uint8_t i2c_tx[32];
+static volatile uint8_t rx_count = 0;
+static volatile uint8_t rx_expected = 0;
 static volatile uint8_t tx_len = 0;
 static volatile uint8_t have_new_cmd = 0;
 
@@ -39,6 +42,31 @@ static inline void i2c_listen(I2C_HandleTypeDef *hi2c)
 {
     HAL_I2C_EnableListen_IT(hi2c);
 }
+
+// Call this from the while(1) loop in main.c
+void process_i2c_cmd(void) {
+	if (!have_new_cmd) return;
+	have_new_cmd = 0;
+
+	uint8_t reg = i2c_rx[0];
+	uint8_t len = (rx_count >= 2) ? i2c_rx[1] : 0;
+	if (len > sizeof(i2c_rx) - 2) len = sizeof(i2c_rx) - 2;
+
+	// Apply writes into your register window
+	for (uint8_t i = 0; i < len; i++) {
+		if ((reg + i) < sizeof(I2C_REGISTERS)) {
+			I2C_REGISTERS[reg + i] = i2c_rx[2 + i];
+		}
+	}
+
+	// Debug print: hex dump of the received message
+	printf("I2C RX: reg=0x%02X len=%u data:", reg, len);
+	for (uint8_t i = 0; i < len; i++) {
+		printf(" %02X", i2c_rx[2 + i]);
+	}
+	printf("\r\n");
+}
+
 
 void process_data (void)
 {
@@ -84,7 +112,8 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, ui
 
     if (TransferDirection == I2C_DIRECTION_TRANSMIT) {
         // Master will WRITE to us: first byte is register/len etc. Receive header (1 byte)
-        rx_len = 0;
+        rx_count = 0;
+    	rx_expected = 0;
         HAL_I2C_Slave_Seq_Receive_IT(hi2c, &i2c_rx[0], 1, I2C_FIRST_AND_NEXT_FRAME);
     } else {
         // Master will READ from us: prepare a small status/register window
@@ -100,16 +129,33 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, ui
 
 void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
-    if (rx_len == 0) {
-        // We just received the header/length at i2c_rx[0]; now receive the payload
-        uint8_t payload = i2c_rx[0];
-        if (payload > sizeof(i2c_rx)-1) payload = sizeof(i2c_rx)-1; // bound
-        rx_len = 1 + payload;
-        HAL_I2C_Slave_Seq_Receive_IT(hi2c, &i2c_rx[1], payload, I2C_LAST_FRAME);
-    } else {
-        // Full message received: set a flag for main loop to process
-        have_new_cmd = 1;
-    }
+	rx_count++;
+
+	if (rx_count == 1) {
+		// Got [reg]; now receive [len]
+		HAL_I2C_Slave_Seq_Receive_IT(hi2c, &i2c_rx[1], 1, I2C_NEXT_FRAME);
+		return;
+	}
+
+	if (rx_count == 2) {
+		// Got [reg][len]; schedule exactly len more bytes as LAST_FRAME
+		rx_expected = i2c_rx[1];
+		if (rx_expected > (sizeof(i2c_rx) - 2)) rx_expected = sizeof(i2c_rx) - 2;
+
+		if (rx_expected == 0) {
+			// No payload; command is complete on STOP
+			have_new_cmd = 1;
+			return; // ListenCplt will re-arm listening
+		}
+
+		HAL_I2C_Slave_Seq_Receive_IT(hi2c, &i2c_rx[2], rx_expected, I2C_LAST_FRAME);
+		return;
+	}
+
+	// Finished receiving payload
+	have_new_cmd = 1;
+	// Be permissive: re-arm listen right away (safe even if STOP is imminent)
+	i2c_listen(hi2c);
 }
 
 void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c)
@@ -126,7 +172,5 @@ void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef *hi2c)
 
 void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
 {
-    // DO NOT heavy-handle in IRQ; just recover listen
-    (void)HAL_I2C_GetError(hi2c);
     i2c_listen(hi2c);
 }

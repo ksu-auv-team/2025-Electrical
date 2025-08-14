@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "usb_device.h"
+#include "i2c_slave.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -111,6 +112,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    process_i2c_cmd();
     /* USER CODE END WHILE */
 	  //pulseWidth = 500 + ((tim1Degrees * 2000) / 180); // pulse width in us
 	  	 //tim1PWM = pulseWidth / 100; // 1 timer period = 100us
