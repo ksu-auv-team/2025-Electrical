@@ -19,6 +19,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "usb_device.h"
+#include "i2c_slave.h"
+
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -116,7 +118,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+    process_i2c_cmd();
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
