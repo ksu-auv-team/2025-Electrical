@@ -112,21 +112,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  //pulseWidth = 500 + ((tim1Degrees * 2000) / 180); // pulse width in us
-	  	 //tim1PWM = pulseWidth / 100; // 1 timer period = 100us
-	  	 //__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, tim1PWM);
 
-	  	 //if (direction)
-	  		 //tim1Degrees += 1;
-	  	 //if (!direction)
-	  	 	 //tim1Degrees -= 1;
-
-	  	 //if (tim1Degrees >= 180)
-	  		 //direction = 0;
-	  	 //else if (tim1Degrees <= 0)
-	  		 //direction = 1;
-
-	  	 //HAL_Delay(28);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -194,7 +180,7 @@ static void MX_I2C2_Init(void)
   /* USER CODE END I2C2_Init 1 */
   hi2c2.Instance = I2C2;
   hi2c2.Init.Timing = 0x20B17DB6;
-  hi2c2.Init.OwnAddress1 = (0x50 << 1);
+  hi2c2.Init.OwnAddress1 = (0x50<<1);
   hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
   hi2c2.Init.OwnAddress2 = 0;
@@ -245,9 +231,9 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 48000-1;
+  htim2.Init.Prescaler = 48-1;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 20000-1;
+  htim2.Init.Period = 19999;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
