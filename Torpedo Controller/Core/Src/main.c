@@ -30,8 +30,8 @@
 /* USER CODE BEGIN PD */
 
 // Typical safe range for many servos; widen only if confirmed
-#define SERVO_MIN_US 1000
-#define SERVO_MAX_US 2000
+#define SERVO_MIN_US 600
+#define SERVO_MAX_US 2400
 
 /* USER CODE END PD */
 
@@ -101,11 +101,11 @@ int main(void)
     process_i2c_cmd();   // handle I2C writes → servo updates
     // HAL_Delay(1);     // optional small sleep
 
-    HAL_Delay(500);
-    servo_write_deg(45);  // center on boot
+    HAL_Delay(5000);
+    servo_write_deg(0);  // center on boot
 
-    HAL_Delay(500);
-    servo_write_deg(135);  // center on boot
+    HAL_Delay(5000);
+    servo_write_deg(180);  // center on boot
 
   }
 }
