@@ -101,11 +101,11 @@ int main(void)
     process_i2c_cmd();   // handle I2C writes → servo updates
     // HAL_Delay(1);     // optional small sleep
 
-    HAL_Delay(5000);
-    servo_write_deg(0);  // center on boot
-
-    HAL_Delay(5000);
-    servo_write_deg(180);  // center on boot
+    // HAL_Delay(5000);
+    // servo_write_deg(0);  // center on boot
+    //
+    // HAL_Delay(5000);
+    // servo_write_deg(180);  // center on boot
 
   }
 }
