@@ -1,17 +1,17 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ * Copyright (c) 2025 STMicroelectronics.
+ * All rights reserved.
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -20,18 +20,16 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
-// DS3225MG typical safe range; widen only if confirmed (e.g., 500–2500)
+// Typical safe range for many servos; widen only if confirmed
 #define SERVO_MIN_US 1000
 #define SERVO_MAX_US 2000
 
@@ -54,22 +52,22 @@ TIM_HandleTypeDef htim2;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_I2C2_Init(void);
 static void MX_TIM2_Init(void);
+static void MX_I2C2_Init(void);
 /* USER CODE BEGIN PFP */
 
-// Map 0–180° to SERVO_MIN_US..SERVO_MAX_US
+// 0–180° → microseconds
 static inline uint16_t angle_to_us(uint8_t deg) {
   if (deg > 180) deg = 180;
   return (uint16_t)(SERVO_MIN_US + ((uint32_t)(SERVO_MAX_US - SERVO_MIN_US) * deg) / 180U);
 }
 
-// Set servo position on TIM2 CH1 in microseconds (CCR == microseconds)
+// Set TIM2 CH1 pulse width in microseconds (CCR == µs)
 static inline void servo_write_us(uint16_t us) {
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, clamp_u16(us, SERVO_MIN_US, SERVO_MAX_US));
 }
 
-// Convenience: set by degrees
+// Convenience
 static inline void servo_write_deg(uint8_t deg) { servo_write_us(angle_to_us(deg)); }
 
 /* USER CODE END PFP */
@@ -84,17 +82,15 @@ int main(void)
   SystemClock_Config();
 
   MX_GPIO_Init();
-  MX_I2C2_Init();
   MX_TIM2_Init();
+  MX_I2C2_Init();
   MX_USB_Device_Init();
 
   /* USER CODE BEGIN 2 */
-  // Start PWM: 1 MHz base (1 µs/tick), 20 ms period
+  // Start PWM at 1 MHz base (1 µs/tick), 20 ms period
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-  // Center the servo at boot
-  servo_write_deg(90);
+  servo_write_deg(90);  // center on boot
 
-  // Enter I2C listen mode
   if (HAL_I2C_EnableListen_IT(&hi2c2) != HAL_OK) {
     Error_Handler();
   }
@@ -102,10 +98,15 @@ int main(void)
 
   while (1)
   {
-    // Processes any completed I2C command and updates the servo
-    process_i2c_cmd();
-    // Optional tiny sleep
-    // HAL_Delay(1);
+    process_i2c_cmd();   // handle I2C writes → servo updates
+    // HAL_Delay(1);     // optional small sleep
+
+    HAL_Delay(500);
+    servo_write_deg(45);  // center on boot
+
+    HAL_Delay(500);
+    servo_write_deg(135);  // center on boot
+
   }
 }
 
@@ -119,44 +120,26 @@ void SystemClock_Config(void)
 
   HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48|RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState  = RCC_HSE_ON;
+  RCC_OscInitStruct.HSI48State= RCC_HSI48_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV1;
-  RCC_OscInitStruct.PLL.PLLN = 12;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV4;
-  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
+  RCC_OscInitStruct.PLL.PLLSource= RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM    = RCC_PLLM_DIV2;
+  RCC_OscInitStruct.PLL.PLLN    = 12;
+  RCC_OscInitStruct.PLL.PLLP    = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ    = RCC_PLLQ_DIV4;
+  RCC_OscInitStruct.PLL.PLLR    = RCC_PLLR_DIV2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) { Error_Handler(); }
 
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.ClockType      = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                                   |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource   = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider  = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK) { Error_Handler(); }
-}
-
-/**
-  * @brief I2C2 Initialization Function
-  */
-static void MX_I2C2_Init(void)
-{
-  hi2c2.Instance = I2C2;
-  hi2c2.Init.Timing           = 0x20B17DB6;
-  hi2c2.Init.OwnAddress1      = (0x50 << 1);
-  hi2c2.Init.AddressingMode   = I2C_ADDRESSINGMODE_7BIT;
-  hi2c2.Init.DualAddressMode  = I2C_DUALADDRESS_DISABLE;
-  hi2c2.Init.OwnAddress2      = 0;
-  hi2c2.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
-  hi2c2.Init.GeneralCallMode  = I2C_GENERALCALL_DISABLE;
-  hi2c2.Init.NoStretchMode    = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c2) != HAL_OK) { Error_Handler(); }
-  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c2, I2C_ANALOGFILTER_ENABLE) != HAL_OK) { Error_Handler(); }
-  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c2, 0) != HAL_OK) { Error_Handler(); }
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK) { Error_Handler(); }
 }
 
 /**
@@ -169,9 +152,11 @@ static void MX_TIM2_Init(void)
   TIM_OC_InitTypeDef sConfigOC              = {0};
 
   htim2.Instance               = TIM2;
-  htim2.Init.Prescaler         = 48 - 1;     // 48 MHz / 48 = 1 MHz -> 1 µs/tick
+
+  // *** Servo-friendly base: 1 MHz (1 µs/tick), 20 ms period ***
+  htim2.Init.Prescaler         = 48 - 1;     // 48 MHz / 48 = 1 MHz
   htim2.Init.CounterMode       = TIM_COUNTERMODE_UP;
-  htim2.Init.Period            = 20000 - 1;  // 20 ms frame (50 Hz)
+  htim2.Init.Period            = 20000 - 1;  // 20,000 µs frame (50 Hz)
   htim2.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
 
@@ -190,10 +175,28 @@ static void MX_TIM2_Init(void)
   sConfigOC.OCFastMode   = TIM_OCFAST_DISABLE;
 
   if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK) { Error_Handler(); }
-  // Leave CH2 configured if needed
   if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_2) != HAL_OK) { Error_Handler(); }
 
   HAL_TIM_MspPostInit(&htim2);
+}
+
+/**
+  * @brief I2C2 Initialization Function
+  */
+static void MX_I2C2_Init(void)
+{
+  hi2c2.Instance = I2C2;
+  hi2c2.Init.Timing           = 0x10805D88;
+  hi2c2.Init.OwnAddress1      = (0x4F << 1);
+  hi2c2.Init.AddressingMode   = I2C_ADDRESSINGMODE_7BIT;
+  hi2c2.Init.DualAddressMode  = I2C_DUALADDRESS_DISABLE;
+  hi2c2.Init.OwnAddress2      = 0;
+  hi2c2.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+  hi2c2.Init.GeneralCallMode  = I2C_GENERALCALL_DISABLE;
+  hi2c2.Init.NoStretchMode    = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c2) != HAL_OK) { Error_Handler(); }
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c2, I2C_ANALOGFILTER_ENABLE) != HAL_OK) { Error_Handler(); }
+  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c2, 0) != HAL_OK) { Error_Handler(); }
 }
 
 /**
