@@ -1,3 +1,5 @@
 # STM32CubeIDE
 .metadata/
 .settings/
+../Release/
+../Debug/
