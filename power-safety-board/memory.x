@@ -1,0 +1,7 @@
+/* Memory layout for STM32G431KB */
+/* 128KB Flash, 32KB RAM */
+MEMORY
+{
+  FLASH : ORIGIN = 0x08000000, LENGTH = 128K
+  RAM : ORIGIN = 0x20000000, LENGTH = 32K
+}
